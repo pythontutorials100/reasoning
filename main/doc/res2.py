@@ -1,24 +1,100 @@
-@prefix : <http://api.stardog.com/> .
-@prefix owl: <http://www.w3.org/2002/07/owl#> .
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
-@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
-@prefix so: <https://schema.org/> .
-@prefix stardog: <tag:stardog:api:> .
-@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
-@prefix asd: <tag:stardog:studio:asd:model:> .
+PREFIX asd: <tag:stardog:studio:asd:model:>
 
-asd:event a owl:Class ;
-    rdfs:label "event" ;
-    <tag:stardog:studio:label> "event" .
+CONSTRUCT {
+  ?event1 asd:precedes ?event2 .
+  ?edge a asd:Edge ;
+        asd:edgeType "asserted" ;
+        asd:from ?event1 ;
+        asd:to ?event2 .
+}
+WHERE {
+  GRAPH <tag:stardog:api:context:default> {
+    ?event1 asd:precedes ?event2 .
+  }
+  BIND(IRI(CONCAT("urn:edge:", STRUUID())) AS ?edge)
+}
 
-asd:precedes a owl:ObjectProperty , owl:TransitiveProperty ;
-    rdfs:label "precedes" ;
-    <tag:stardog:studio:label> "precedes" .
 
-asd:e1 a asd:event ;
-    asd:precedes asd:e2 .
 
-asd:e2 a asd:event ;
-    asd:precedes asd:e3 .
 
-asd:e3 a asd:event .
+
+================
+
+PREFIX asd: <tag:stardog:studio:asd:model:>
+
+CONSTRUCT {
+  ?event1 asd:precedes ?event2 .
+  ?edge a asd:Edge ;
+        asd:edgeType "inferred" ;
+        asd:from ?event1 ;
+        asd:to ?event2 .
+}
+WHERE {
+  GRAPH <tag:stardog:api:context:inference> {
+    ?event1 asd:precedes ?event2 .
+  }
+  BIND(IRI(CONCAT("urn:edge:", STRUUID())) AS ?edge)
+}
+
+
+
+=====================
+
+
+PREFIX asd: <http://example.org/asd#>
+
+CONSTRUCT {
+  ?event1 asd:precedes ?event2 .
+  ?edge a asd:Edge ;
+        asd:edgeType ?edgeType ;
+        asd:from ?event1 ;
+        asd:to ?event2 .
+}
+WHERE {
+  {
+    # Retrieve all triples with reasoning enabled
+    ?event1 asd:precedes ?event2 .
+    BIND("all" AS ?type)
+  }
+  
+  BIND(IRI(CONCAT("urn:edge:", STRUUID())) AS ?edge)
+  
+  # Determine if the triple is asserted or inferred
+  OPTIONAL {
+    SERVICE <reasoning:off> {
+      ?event1 asd:precedes ?event2 .
+    }
+    BIND("asserted" AS ?type)
+  }
+  
+  BIND(
+    IF(?type = "asserted", "asserted", "inferred") AS ?edgeType
+  )
+}
+
+
+================
+
+
+PREFIX asd: <http://example.org/asd#>
+
+CONSTRUCT {
+  ?event1 asd:precedes ?event2 .
+  ?edge a asd:Edge ;
+        asd:edgeType "inferred" ;
+        asd:from ?event1 ;
+        asd:to ?event2 .
+}
+WHERE {
+  # Retrieve all triples with reasoning enabled
+  ?event1 asd:precedes ?event2 .
+  
+  # Exclude asserted triples
+  MINUS {
+    SERVICE <reasoning:off> {
+      ?event1 asd:precedes ?event2 .
+    }
+  }
+  
+  BIND(IRI(CONCAT("urn:edge:", STRUUID())) AS ?edge)
+}
