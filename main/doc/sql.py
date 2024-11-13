@@ -1,340 +1,177 @@
-Understanding the SPARQL Code
-
-We'll break down the following two code snippets:
-
-    First Code Snippet:
-
-BIND(
-  IF ( <Condition 1 expression involving ?value1 and/or ?value2>,
-       true,
-       false
-  ) AS ?Condition1Result
-)
-
-Second Code Snippet:
-
-    BIND(
-      IF ( ?Condition1Result = true,
-           IF ( <Condition 2A expression>, true, false ),
-           IF ( <Condition 2B expression>, true, false )
-      ) AS ?Condition2Result
-    )
-
-Explanation of Each Component
-1. The BIND Keyword
-
-    Purpose: In SPARQL, the BIND clause is used to assign the result of an expression to a new variable.
-    Syntax: BIND ( expression AS ?variable )
-    Usage: It allows you to compute values based on existing variables and make them available for use later in the query.
-
-Example:
-
-BIND ( ?value1 + ?value2 AS ?sum )
-
-    Here, ?sum will hold the result of ?value1 + ?value2.
-
-2. The IF Function
-
-    Purpose: The IF function in SPARQL evaluates a condition and returns one value if the condition is true and another value if it's false.
-    Syntax: IF ( condition, value_if_true, value_if_false )
-    Usage: It's used to implement conditional logic within SPARQL queries.
-
-Example:
-
-IF ( ?age >= 18, "adult", "minor" )
-
-    If ?age is 18 or more, it returns "adult"; otherwise, it returns "minor".
-
-3. The AS Keyword
-
-    Purpose: Within a BIND clause, AS specifies the variable name that the result of the expression will be bound to.
-    Syntax: BIND ( expression AS ?variable )
-    Usage: It names the variable that will store the result of the expression.
-
-Detailed Explanation of the First Code Snippet
-
-BIND(
-  IF ( <Condition 1 expression involving ?value1 and/or ?value2>,
-       true,
-       false
-  ) AS ?Condition1Result
-)
-
-Step-by-Step Breakdown
-
-    <Condition 1 expression involving ?value1 and/or ?value2>
-        This is a placeholder for the actual logical condition you want to evaluate.
-        It could be any expression that results in a boolean value (true or false).
-        Examples:
-            ?value1 > 10
-            ?value2 = "active"
-            REGEX(STR(?value1), "^pattern")
-
-    IF ( condition, true, false )
-        The IF function evaluates the condition.
-        If the condition is true, it returns true.
-        If the condition is false, it returns false.
-
-    BIND ( ... AS ?Condition1Result )
-        The result of the IF function (either true or false) is bound to the variable ?Condition1Result.
-        This variable can then be used later in the query.
-
-Purpose of This Code Snippet
-
-    Evaluate Condition 1: Determine whether the first condition is met based on the values of ?value1 and/or ?value2.
-    Store the Result: The outcome (true or false) is stored in ?Condition1Result for use in subsequent logic.
-
-Detailed Explanation of the Second Code Snippet
-
-BIND(
-  IF ( ?Condition1Result = true,
-       IF ( <Condition 2A expression>, true, false ),
-       IF ( <Condition 2B expression>, true, false )
-  ) AS ?Condition2Result
-)
-
-Step-by-Step Breakdown
-
-    IF ( ?Condition1Result = true, then_expr, else_expr )
-        This IF function checks if ?Condition1Result is true.
-        If ?Condition1Result is true:
-            It evaluates then_expr, which is IF ( <Condition 2A expression>, true, false ).
-        If ?Condition1Result is false:
-            It evaluates else_expr, which is IF ( <Condition 2B expression>, true, false ).
-
-    Nested IF Functions
-        When ?Condition1Result is true:
-            It evaluates Condition 2A:
-
-    IF ( <Condition 2A expression>, true, false )
-
-    The result (true or false) of Condition 2A is then assigned to ?Condition2Result.
-
-When ?Condition1Result is false:
-
-    It evaluates Condition 2B:
-
-            IF ( <Condition 2B expression>, true, false )
-
-            The result (true or false) of Condition 2B is then assigned to ?Condition2Result.
-
-    BIND ( ... AS ?Condition2Result )
-        The final result (after evaluating the appropriate nested IF function) is bound to ?Condition2Result.
-
-Purpose of This Code Snippet
-
-    Branching Logic: Based on the result of Condition 1, decide which of the two conditions (Condition 2A or Condition 2B) to evaluate next.
-    Evaluate the Next Condition: Evaluate the appropriate condition and store the result in ?Condition2Result.
-    Store the Result: The outcome (true or false) of Condition 2A or Condition 2B is stored in ?Condition2Result.
-
-Why Use true and false in the IF Functions?
-
-    Standardizing Results: By returning true or false, you standardize the outcome of the condition evaluations.
-    Facilitating Further Logic: It allows you to use these boolean variables (?Condition1Result, ?Condition2Result, etc.) in subsequent conditional expressions.
-    Clarity: Explicitly returning true or false makes the logic clear and the query easier to understand.
-
-Example Alternative:
-
-    You could return other values (e.g., numbers, strings), but using true and false simplifies logical operations and comparisons.
-
-Putting It All Together: An Example
-
-Let's consider concrete conditions and see how this works.
-Assume the Following Variables:
-
-    ?value1 represents the age of a person.
-    ?value2 represents the status of a person (e.g., "employed" or "unemployed").
-
-First Code Snippet with Actual Conditions:
-
-BIND(
-  IF ( ?value1 >= 18,
-       true,
-       false
-  ) AS ?Condition1Result
-)
-
-    Condition 1: Is the person an adult (age 18 or older)?
-    If: ?value1 >= 18 is true, then ?Condition1Result is true.
-    Else: ?Condition1Result is false.
-
-Second Code Snippet with Actual Conditions:
-
-BIND(
-  IF ( ?Condition1Result = true,
-       IF ( ?value2 = "employed", true, false ),
-       IF ( ?value2 = "student", true, false )
-  ) AS ?Condition2Result
-)
-
-    Branching Logic:
-        If the person is an adult (?Condition1Result = true):
-            Condition 2A: Is the person employed?
-                If ?value2 = "employed", then ?Condition2Result is true.
-                Else, ?Condition2Result is false.
-        If the person is not an adult (?Condition1Result = false):
-            Condition 2B: Is the person a student?
-                If ?value2 = "student", then ?Condition2Result is true.
-                Else, ?Condition2Result is false.
-
-Why Use Nested IF Functions?
-
-    To Implement Conditional Branching: Depending on the outcome of the previous condition, you might need to evaluate different subsequent conditions.
-    Flexibility: Allows you to build complex decision logic within a single query.
-
-Visualizing the Decision Logic
-
-Here's a simplified representation of the decision tree logic implemented by the code:
-
-    Condition 1: Is the person an adult?
-        Yes (?Condition1Result = true):
-            Condition 2A: Is the person employed?
-        No (?Condition1Result = false):
-            Condition 2B: Is the person a student?
-
-    Outcome:
-        Based on the results of the conditions, you can determine the next steps or actions.
-
-Key Points to Remember
-
-    BIND Clause:
-        Assigns the result of an expression to a variable.
-        The expression can be any valid SPARQL expression.
-
-    IF Function:
-        Used to perform conditional evaluations.
-        Syntax: IF ( condition, value_if_true, value_if_false ).
-        Can be nested to handle multiple levels of conditions.
-
-    Returning true or false:
-        Makes it easier to use the results in further logical operations.
-        Standardizes the outcomes of conditions for consistent handling.
-
-    Use of AS:
-        Specifies the variable name to bind the result of the expression to.
-        Ensures that the variable is available for use later in the query.
-
-Applying This Understanding to Your Query
-
-    Implementing Multiple Conditions:
-        Use BIND and IF to sequentially evaluate each condition.
-        Store the result of each condition in a variable (e.g., ?Condition1Result, ?Condition2Result).
-
-    Using Condition Results:
-        Subsequent conditions can use the results of previous conditions to decide which expressions to evaluate.
-        This mimics the branching behavior of a decision tree.
-
-    Constructing the Final Output:
-        Based on the combination of condition results, you can determine the final action or output.
-        Use nested IF statements or a mapping table to map condition combinations to outputs.
-
-Example: Full SPARQL Query with Explanations
-
-Let's build a complete example with explanations.
-Assumptions:
-
-    Data:
-        ?person is an individual in your dataset.
-        ?age is their age.
-        ?status is their employment status.
-        ?studentStatus indicates if they are a student.
-
-Query:
-
-PREFIX : <http://example.org/ontology#>
-
-SELECT ?person ?finalAction WHERE {
-
-  # Retrieve data
-  ?person :hasAge ?age .
-  OPTIONAL { ?person :employmentStatus ?status . }
-  OPTIONAL { ?person :studentStatus ?studentStatus . }
-
-  # Condition 1: Is the person an adult?
-  BIND(
-    IF ( ?age >= 18,
-         true,
-         false
-    ) AS ?Condition1Result
-  )
-
-  # Condition 2: Branch based on Condition 1
-  BIND(
-    IF ( ?Condition1Result = true,
-         # Condition 2A: Is the person employed?
-         IF ( ?status = "employed", true, false ),
-         # Condition 2B: Is the person a student?
-         IF ( ?studentStatus = "yes", true, false )
-    ) AS ?Condition2Result
-  )
-
-  # Determine the final action based on the conditions
-  BIND(
-    IF (
-      ?Condition1Result = true && ?Condition2Result = true,
-      "Provide Employment Benefits",
-      IF (
-        ?Condition1Result = true && ?Condition2Result = false,
-        "Offer Job Training",
-        IF (
-          ?Condition1Result = false && ?Condition2Result = true,
-          "Provide Educational Resources",
-          "No Action"
-        )
-      )
-    ) AS ?finalAction
-  )
-}
-
-Explanation:
-
-    Data Retrieval:
-        Get each ?person's age, employment status, and student status.
-
-    Condition 1:
-        Check if the person is an adult (?age >= 18).
-        Store the result in ?Condition1Result.
-
-    Condition 2:
-        If the person is an adult (?Condition1Result = true):
-            Condition 2A: Check if they are employed.
-        If the person is not an adult (?Condition1Result = false):
-            Condition 2B: Check if they are a student.
-
-    Final Action Determination:
-        Use the combination of ?Condition1Result and ?Condition2Result to decide on the ?finalAction.
-
-Conclusion
-
-    BIND:
-        Used to assign the result of an expression to a variable.
-        Essential for making intermediate results available for further processing.
-
-    AS:
-        Specifies the variable name in the BIND clause.
-
-    IF Function:
-        Allows for conditional logic within SPARQL queries.
-        Can be nested to handle complex decision-making.
-
-    Returning true or false:
-        Simplifies the handling of condition results.
-        Facilitates the use of logical operators in subsequent conditions.
-
-Additional Tips
-
-    Variable Naming:
-        Use meaningful variable names (e.g., ?Condition1Result) to keep track of the condition results.
-
-    Logical Operators:
-        Use && for logical AND.
-        Use || for logical OR.
-
-    Error Handling:
-        Ensure that all variables used in conditions are bound to avoid errors.
-        Use OPTIONAL clauses to handle data that might be missing.
-
-    Testing Conditions Separately:
-        During development, you can output intermediate condition results by including them in the SELECT clause.
-
-I hope this detailed explanation clarifies how the BIND, IF, and AS constructs are used in your SPARQL query, and why true and false are specified after the expressions. Feel free to ask if you have any further questions or need additional clarification!
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/24.7.17 Chrome/128.0.6613.36 Electron/32.0.1 Safari/537.36" version="24.7.17">
+  <diagram name="Page-1" id="Ma8LH9DBfKTxv96wTR0o">
+    <mxGraphModel dx="2013" dy="1916" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Iy7JSGQe4k33m195K1t1-2" value="Part" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="670" y="480" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-23" value="bearer of" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-3" target="Iy7JSGQe4k33m195K1t1-22" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-3" value="part 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="380" y="70" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-5" value="Process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="110" y="250" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-7" value="Requirement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="-90" y="90" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-9" value="Program Requirement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="930" y="400" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-10" value="Manufacturing Process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="10" y="380" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-11" value="Marking Process" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="-70" y="540" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-12" value="Serial Number Requirement" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0a30a;fontColor=#000000;strokeColor=#BD7000;" parent="1" vertex="1">
+          <mxGeometry x="390" y="640" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-19" value="has text value" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="Iy7JSGQe4k33m195K1t1-13" target="Iy7JSGQe4k33m195K1t1-18" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-13" value="ibe part number 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="380" y="-140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-15" value="designates" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-14" target="Iy7JSGQe4k33m195K1t1-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-16" value="generically depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-14" target="Iy7JSGQe4k33m195K1t1-13" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-14" value="ice part number 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="380" y="-40" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-18" value="PN00123" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="380" y="-250" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-25" value="prescribes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-20" target="Iy7JSGQe4k33m195K1t1-29" edge="1">
+          <mxGeometry x="-0.0012" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-20" value="Requirement 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="920" y="-140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-32" value="has part" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-22" target="Iy7JSGQe4k33m195K1t1-29" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-34" value="has part" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-22" target="Iy7JSGQe4k33m195K1t1-33" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-22" value="agrregate of quality 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="620" y="70" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-26" value="process 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="950" y="210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-29" value="quality 1" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="590" y="-140" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-33" value="quality 2" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="720" y="-60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-36" value="prescribes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-35" target="Iy7JSGQe4k33m195K1t1-33" edge="1">
+          <mxGeometry x="-0.5294" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-35" value="Requirement 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="-60" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-38" value="prescribes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-37" target="Iy7JSGQe4k33m195K1t1-26" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-39" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.25;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-37" target="Iy7JSGQe4k33m195K1t1-20" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-40" value="has part" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="Iy7JSGQe4k33m195K1t1-39" vertex="1" connectable="0">
+          <mxGeometry x="-0.3195" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-41" value="has part" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-37" target="Iy7JSGQe4k33m195K1t1-35" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-37" value="agrregate of requirements 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#76608a;fontColor=#ffffff;strokeColor=#432D57;" parent="1" vertex="1">
+          <mxGeometry x="950" y="70" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-47" value="describes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-42" target="Iy7JSGQe4k33m195K1t1-29" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-48" value="generically depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-42" target="Iy7JSGQe4k33m195K1t1-43" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-42" value="ice quality 1" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="590" y="-255" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="Iy7JSGQe4k33m195K1t1-43" target="Iy7JSGQe4k33m195K1t1-44" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-46" value="has text value" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="Iy7JSGQe4k33m195K1t1-45" vertex="1" connectable="0">
+          <mxGeometry x="0.0579" y="-3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-43" value="ibe quality 1" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="590" y="-370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-44" value="quality 1 literal" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="590" y="-470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-51" value="describes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-49" target="Iy7JSGQe4k33m195K1t1-33" edge="1">
+          <mxGeometry x="0.5294" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-52" value="generically depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-49" target="Iy7JSGQe4k33m195K1t1-50" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-49" value="ice quality 2" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="720" y="-205" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-54" value="has text value" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-50" target="Iy7JSGQe4k33m195K1t1-53" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-50" value="ibe quality 2" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="720" y="-315" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-53" value="quality 2 literal" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="720" y="-420" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-58" value="generically depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-20" target="Iy7JSGQe4k33m195K1t1-56" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="980" y="-250" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-64" value="has text value" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-56" target="Iy7JSGQe4k33m195K1t1-63" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-56" value="ibe requirement 1" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="920" y="-370" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-62" value="generically depends on" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-35" target="Iy7JSGQe4k33m195K1t1-60" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1120" y="-170" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-66" value="has text value" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="Iy7JSGQe4k33m195K1t1-60" target="Iy7JSGQe4k33m195K1t1-65" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-60" value="ibe requirement 2" style="whiteSpace=wrap;html=1;fillColor=#76608a;strokeColor=#432D57;fontColor=#ffffff;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="-315" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-63" value="requirement 1 literal" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="920" y="-470" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Iy7JSGQe4k33m195K1t1-65" value="requirement 2 literal" style="whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;rounded=1;" parent="1" vertex="1">
+          <mxGeometry x="1060" y="-410" width="120" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
